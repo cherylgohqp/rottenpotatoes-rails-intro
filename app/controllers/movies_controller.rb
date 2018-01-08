@@ -11,10 +11,43 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @sort = params[:sort]
-    @movies = Movie.order(@sort)
-
+    @movies = Movie.all
+    @all_ratings = Movie.order(:rating).select(:rating).map(&:rating).uniq #.order(:rating) order in ascending order by the rating field
+    #.map(&:rating) is similar to .map{|x| x.rating}
+    @checked_ratings = check
+    @checked_ratings.each do |rating|
+    params[rating] = true
   end
+    if params[:ratings]
+      @ratings = params[:ratings].keys
+      session[:filtered_rating] = @ratings # save ratings checked in the session so it can be used again
+
+    elsif session[:filtered_rating] #after filtering, keep check boxes previously checked, checked
+      query = Hash.new
+      session[:filtered_rating].each do |rating|
+        query['ratings['+rating+']'] = 1
+      end
+      query['sort'] = params[:sort] if params[:sort]
+      session[:filtered_rating] = nil
+      flash.keep # persist all flash values
+      redirect_to movies_path(query)
+
+    else
+      @ratings = @all_ratings
+    end
+
+  @movies.where!(rating:@ratings)
+
+    case params[:sort]
+    when 'title'
+      @movies.order!('title asc')
+      @title_class = "hilite"
+    when 'release_date'
+      @movies.order!('release_date asc')
+      @release_date_class = "hilite"
+    end
+  end
+
 
   def new
     # default: render 'new' template
@@ -44,4 +77,13 @@ class MoviesController < ApplicationController
     redirect_to movies_path
   end
 
+  def check
+    if params[:ratings]
+      params[:ratings].keys
+    else
+      @all_ratings
+    end
+  end
+
 end
+
