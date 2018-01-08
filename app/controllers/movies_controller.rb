@@ -36,15 +36,15 @@ class MoviesController < ApplicationController
       @ratings = @all_ratings
     end
 
-  @movies.where!(rating:@ratings)
+  @movies.where!(rating:@ratings) #find all movies that are filtered
 
     case params[:sort]
     when 'title'
       @movies.order!('title asc')
-      @title_class = "hilite"
+     # @title_class = "hilite"
     when 'release_date'
       @movies.order!('release_date asc')
-      @release_date_class = "hilite"
+      #@release_date_class = "hilite"
     end
   end
 
